@@ -133,6 +133,30 @@ open_offline(PyObject *self, PyObject *args)
   return new_pcapobject( pt );
 }
 
+static PyObject*
+open_offline_with_tstamp_precision(PyObject *self, PyObject *args)
+{
+  char errbuff[PCAP_ERRBUF_SIZE];
+  char * filename;
+  
+  
+  if(!PyArg_ParseTuple(args,"s",&filename))
+    return NULL;
+  
+  pcap_t* pt;
+	
+  pt = pcap_open_offline_with_tstamp_precision(filename, PCAP_TSTAMP_PRECISION_NANO, errbuff);
+  if(!pt)
+    {
+      PyErr_SetString(PcapError, errbuff);
+      return NULL;
+    }
+#ifdef WIN32
+  pcap_setmintocopy(pt, 0);
+#endif
+
+  return new_pcapobject( pt );
+}
 
 static PyObject*
 bpf_compile(PyObject* self, PyObject* args)
@@ -175,6 +199,7 @@ bpf_compile(PyObject* self, PyObject* args)
 static PyMethodDef pcap_methods[] = {
   {"open_live", open_live, METH_VARARGS, "open_live(device, snaplen, promisc, to_ms) opens a pcap device"},
   {"open_offline", open_offline, METH_VARARGS, "open_offline(filename) opens a pcap formated file"},
+  {"open_offline_with_tstamp_precision", open_offline_with_tstamp_precision, METH_VARARGS, "open_offline(filename) opens a pcap formated file with nanosecond accuracy timestamps"},
   {"lookupdev", lookupdev, METH_VARARGS, "lookupdev() looks up a pcap device"},
   {"findalldevs", findalldevs, METH_VARARGS, "findalldevs() lists all available interfaces"},
   {"compile", bpf_compile, METH_VARARGS, "compile(linktype, snaplen, filter, optimize, netmask) creates a bpfprogram object"},
